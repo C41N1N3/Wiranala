@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-stone: #f4f4ed;
+  --bg-olive: #282c20;
+  --bg-obsidian: #111310;
+  --ink-dark: #1d2119;
+  --ink-light: #f4f4ed;
+  --accent-volt: #d2ff00;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-stone);
+  --color-foreground: var(--ink-dark);
+  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-barlow);
+  --font-serif: var(--font-instrument);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--bg-stone);
+    color: var(--ink-dark);
+    font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  }
+
+  a[href],
+  button:not(:disabled),
+  summary,
+  select,
+  label[for] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 2px solid #d2ff00;
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.font-display {
+  font-family: var(--font-barlow), var(--font-jakarta), sans-serif;
+}
+
+.font-editorial {
+  font-family: var(--font-instrument), Georgia, serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

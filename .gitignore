@@ -1,0 +1,10 @@
+# Compiled Go binary
+backend/backend
+
+# Environment & secrets
+.env
+.env.*
+
+# Logs & OS metadata
+*.log
+.DS_Store
