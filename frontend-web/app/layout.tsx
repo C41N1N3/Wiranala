@@ -4,6 +4,7 @@ import {
   Instrument_Serif,
   Plus_Jakarta_Sans,
 } from "next/font/google";
+import { SmoothScrollProvider } from "@/components/wiranala/SmoothScrollProvider";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -42,7 +43,7 @@ export default function RootLayout({
       className={`${plusJakarta.variable} ${barlowCondensed.variable} ${instrumentSerif.variable}`}
     >
       <body className="min-h-screen overflow-x-clip bg-[#f4f4ed] text-[#1d2119] antialiased selection:bg-[#d2ff00] selection:text-[#11140d]">
-        {children}
+        <SmoothScrollProvider>{children}</SmoothScrollProvider>
       </body>
     </html>
   );

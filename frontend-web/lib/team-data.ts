@@ -61,6 +61,13 @@ export const teamIdentity = {
   city: "Surabaya, Indonesia",
 } as const;
 
+export const kartModelConfig = {
+  // Drop your exported CAD model at public/models/wiranala-kart.glb
+  // and set glbPath: "/models/wiranala-kart.glb" to swap out the procedural template.
+  glbPath: null as string | null,
+  stageNote: "3D WebGL Template · Swap with public/models/wiranala-kart.glb",
+} as const;
+
 export const navItems: NavItem[] = [
   { label: "Story", href: "#scroll-story" },
   { label: "Engineering", href: "#parallax-story" },

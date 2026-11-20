@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import { RollingText } from "@/components/wiranala/RollingText";
+import { useSmoothScroll } from "@/components/wiranala/SmoothScrollProvider";
 import { sponsorCategories, teamIdentity } from "@/lib/team-data";
 
 export function Footer({ onOpenContact }: { onOpenContact: () => void }) {
+  const { scrollTo } = useSmoothScroll();
   const [selectedCategory, setSelectedCategory] = useState(
     sponsorCategories[0].category
   );
@@ -61,26 +64,25 @@ export function Footer({ onOpenContact }: { onOpenContact: () => void }) {
                 Sections
               </div>
               <ul className="mt-4 space-y-2 font-display text-2xl font-extrabold uppercase tracking-tight">
-                <li>
-                  <a href="#scroll-story" className="hover:text-[#d2ff00]">
-                    Story
-                  </a>
-                </li>
-                <li>
-                  <a href="#parallax-story" className="hover:text-[#d2ff00]">
-                    Engineering
-                  </a>
-                </li>
-                <li>
-                  <a href="#divisions" className="hover:text-[#d2ff00]">
-                    Divisions
-                  </a>
-                </li>
-                <li>
-                  <a href="#garage" className="hover:text-[#d2ff00]">
-                    Garage
-                  </a>
-                </li>
+                {[
+                  { label: "Story", href: "#scroll-story" },
+                  { label: "Engineering", href: "#parallax-story" },
+                  { label: "Divisions", href: "#divisions" },
+                  { label: "Garage", href: "#garage" },
+                ].map((link) => (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollTo(link.href, { offset: -16 });
+                      }}
+                      className="group inline-flex py-0.5 hover:text-[#d2ff00]"
+                    >
+                      <RollingText text={link.label} />
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -99,9 +101,9 @@ export function Footer({ onOpenContact }: { onOpenContact: () => void }) {
               <button
                 type="button"
                 onClick={onOpenContact}
-                className="mt-5 min-h-[44px] rounded-md bg-[#d2ff00] px-5 py-2.5 font-display text-sm font-bold uppercase tracking-[0.08em] text-[#11140d] hover:bg-[#dcff33]"
+                className="group mt-5 min-h-[44px] rounded-md bg-[#d2ff00] px-5 py-2.5 font-display text-sm font-bold uppercase tracking-[0.08em] text-[#11140d] hover:bg-[#dcff33]"
               >
-                Partner / Contact Team
+                <RollingText text="Partner / Contact Team" />
               </button>
             </div>
           </div>

@@ -1,21 +1,33 @@
 "use client";
 
-import React, { useRef } from "react";
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "framer-motion";
+import React, { useEffect, useRef, useSyncExternalStore } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowUpRight } from "lucide-react";
 import { TopoContours } from "@/components/wiranala/TopoContours";
 import { storyFrames, type StoryFrame } from "@/lib/team-data";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export interface DetailPayload {
   eyebrow: string;
   title: string;
   summary: string;
   items: string[];
+}
+
+function subscribeReducedMotion(onChange: () => void) {
+  const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
+}
+
+function getReducedMotionSnapshot() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function getFalseSnapshot() {
+  return false;
 }
 
 function FrameIllustration({ id }: { id: string }) {
@@ -129,24 +141,68 @@ export function ParallaxStorySection({
   onSelectDetail: (detail: DetailPayload) => void;
 }) {
   const sectionRef = useRef<HTMLElement>(null);
-  const prefersReducedMotion = useReducedMotion();
+  const line1Ref = useRef<HTMLDivElement>(null);
+  const line2Ref = useRef<HTMLDivElement>(null);
+  const colSlowRef = useRef<HTMLDivElement>(null);
+  const colFastRef = useRef<HTMLDivElement>(null);
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
-
-  // Lando-style canvas transition: #282c20 -> #535849 -> #f4f4ed
-  const bgTransition = useTransform(
-    scrollYProgress,
-    [0, 0.32, 0.62, 0.85],
-    ["#282c20", "#282c20", "#535849", "#f4f4ed"]
+  const prefersReducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getFalseSnapshot
   );
 
-  const line1X = useTransform(scrollYProgress, [0, 0.55], [-40, 28]);
-  const line2X = useTransform(scrollYProgress, [0, 0.55], [40, -28]);
-  const colSlowY = useTransform(scrollYProgress, [0.2, 0.9], [28, -28]);
-  const colFastY = useTransform(scrollYProgress, [0.2, 0.9], [68, -68]);
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    const section = sectionRef.current;
+    const line1 = line1Ref.current;
+    const line2 = line2Ref.current;
+    const colSlow = colSlowRef.current;
+    const colFast = colFastRef.current;
+
+    if (!section || !line1 || !line2 || !colSlow || !colFast) return;
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: section,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      // Smooth Lando canvas morph: #282c20 -> #535849 -> #f4f4ed
+      tl.fromTo(
+        section,
+        { backgroundColor: "#282c20" },
+        { backgroundColor: "#535849", duration: 0.3 },
+        0.32
+      );
+      tl.to(
+        section,
+        { backgroundColor: "#f4f4ed", duration: 0.23, immediateRender: false },
+        0.62
+      );
+
+      // Opposing horizontal display lines
+      tl.fromTo(line1, { x: -40 }, { x: 28, duration: 0.55 }, 0);
+      tl.fromTo(line2, { x: 40 }, { x: -28, duration: 0.55 }, 0);
+
+      // Differential column parallax
+      tl.fromTo(colSlow, { y: 28 }, { y: -28, duration: 0.7 }, 0.2);
+      tl.fromTo(colFast, { y: 68 }, { y: -68, duration: 0.7 }, 0.2);
+
+      // Anchor timeline span at 1.0
+      tl.to({}, { duration: 0.01 }, 0.99);
+    }, section);
+
+    return () => {
+      ctx.revert();
+    };
+  }, [prefersReducedMotion]);
 
   const toDetail = (frame: StoryFrame): DetailPayload => ({
     eyebrow: frame.tag,
@@ -156,34 +212,33 @@ export function ParallaxStorySection({
   });
 
   return (
-    <motion.section
+    <section
       id="parallax-story"
       ref={sectionRef}
-      style={prefersReducedMotion ? { backgroundColor: "#282c20" } : { backgroundColor: bgTransition }}
-      className="relative overflow-hidden px-4 py-20 sm:px-6 lg:px-10 lg:py-32"
+      className="relative overflow-hidden bg-[#282c20] px-4 py-20 sm:px-6 lg:px-10 lg:py-32"
     >
       <TopoContours strokeColor="#f4f4ed" opacity={0.11} />
 
       <div className="relative z-10 mx-auto max-w-[1320px]">
-        {/* Kinetic Statement Band matching lando-2.png */}
+        {/* Kinetic Statement Band */}
         <div className="py-10 text-center text-[#f4f4ed] lg:py-16">
-          <motion.div style={prefersReducedMotion ? undefined : { x: line1X }}>
+          <div ref={line1Ref} className="will-change-transform">
             <h2 className="font-display text-[clamp(2.5rem,7.2vw,6.25rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.02em]">
               BUILDING ELECTRIC
             </h2>
-          </motion.div>
+          </div>
 
-          <motion.div style={prefersReducedMotion ? undefined : { x: line2X }}>
+          <div ref={line2Ref} className="will-change-transform">
             <div className="font-display text-[clamp(2.5rem,7.2vw,6.25rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.02em]">
               <span className="font-editorial font-normal text-[#d2ff00]">
                 LEGACY
               </span>{" "}
               AT ITS SURABAYA
             </div>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Editorial Quote + Asymmetric Parallax Cards matching lando-3/4.png */}
+        {/* Editorial Quote + Asymmetric Parallax Cards */}
         <div className="mt-16 grid gap-10 lg:grid-cols-12 lg:items-start">
           <div className="lg:col-span-5">
             <div className="rounded-xl border border-[#f4f4ed]/15 bg-[#1d2119]/92 p-7 text-[#f4f4ed] shadow-xl">
@@ -191,7 +246,6 @@ export function ParallaxStorySection({
                 &ldquo;From the workshop floor at ITS Surabaya, we build electric karting from chassis to telemetry.&rdquo;
               </p>
 
-              {/* Volt stroke mark */}
               <svg
                 aria-hidden="true"
                 viewBox="0 0 180 34"
@@ -209,10 +263,7 @@ export function ParallaxStorySection({
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:col-span-7">
-            <motion.div
-              style={prefersReducedMotion ? undefined : { y: colSlowY }}
-              className="space-y-6"
-            >
+            <div ref={colSlowRef} className="space-y-6 will-change-transform">
               {[storyFrames[0], storyFrames[2]].map((frame) => (
                 <button
                   key={frame.id}
@@ -241,11 +292,11 @@ export function ParallaxStorySection({
                   </div>
                 </button>
               ))}
-            </motion.div>
+            </div>
 
-            <motion.div
-              style={prefersReducedMotion ? undefined : { y: colFastY }}
-              className="space-y-6 sm:pt-10"
+            <div
+              ref={colFastRef}
+              className="space-y-6 will-change-transform sm:pt-10"
             >
               {[storyFrames[1], storyFrames[3]].map((frame) => (
                 <button
@@ -275,10 +326,10 @@ export function ParallaxStorySection({
                   </div>
                 </button>
               ))}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
-    </motion.section>
+    </section>
   );
 }

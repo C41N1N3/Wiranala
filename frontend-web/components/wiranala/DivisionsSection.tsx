@@ -1,10 +1,27 @@
 "use client";
 
-import React from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import React, { useEffect, useRef, useSyncExternalStore } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowUpRight } from "lucide-react";
 import { teamDivisions, type TeamDivision } from "@/lib/team-data";
 import type { DetailPayload } from "@/components/wiranala/ParallaxStorySection";
+
+gsap.registerPlugin(ScrollTrigger);
+
+function subscribeReducedMotion(onChange: () => void) {
+  const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
+}
+
+function getReducedMotionSnapshot() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function getFalseSnapshot() {
+  return false;
+}
 
 function DivisionEmblem({ code }: { code: string }) {
   return (
@@ -46,7 +63,45 @@ export function DivisionsSection({
 }: {
   onSelectDetail: (detail: DetailPayload) => void;
 }) {
-  const prefersReducedMotion = useReducedMotion();
+  const gridRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getFalseSnapshot
+  );
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const ctx = gsap.context(() => {
+      const cards = gsap.utils.toArray<HTMLElement>("[data-division-card]");
+      if (!cards.length) return;
+
+      gsap.fromTo(
+        cards,
+        { opacity: 0, y: 24 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          stagger: 0.08,
+          ease: "power2.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: grid,
+            start: "top 85%",
+            once: true,
+          },
+        }
+      );
+    }, grid);
+
+    return () => {
+      ctx.revert();
+    };
+  }, [prefersReducedMotion]);
 
   const handleOpen = (div: TeamDivision) => {
     onSelectDetail({
@@ -77,17 +132,17 @@ export function DivisionsSection({
           </p>
         </div>
 
-        {/* Chamfered Dark Cards inspired by Lando's Helmets Hall of Fame */}
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {teamDivisions.map((div, idx) => (
-            <motion.button
+        {/* Chamfered Dark Cards with GSAP Staggered ScrollTrigger Reveal */}
+        <div
+          ref={gridRef}
+          className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
+        >
+          {teamDivisions.map((div) => (
+            <button
               key={div.code}
+              data-division-card
               type="button"
               onClick={() => handleOpen(div)}
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.25 }}
-              transition={{ duration: 0.45, delay: idx * 0.07 }}
               style={{
                 clipPath:
                   "polygon(0 0, 100% 0, 100% calc(100% - 26px), calc(100% - 26px) 100%, 0 100%)",
@@ -118,7 +173,7 @@ export function DivisionsSection({
                   <span className="text-[#d2ff00]">{div.code}</span>
                 </div>
               </div>
-            </motion.button>
+            </button>
           ))}
         </div>
       </div>

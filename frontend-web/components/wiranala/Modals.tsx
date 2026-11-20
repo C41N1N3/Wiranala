@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
+import { useSmoothScroll } from "@/components/wiranala/SmoothScrollProvider";
 import type { DetailPayload } from "@/components/wiranala/ParallaxStorySection";
 
 export function DetailModal({
@@ -13,13 +14,19 @@ export function DetailModal({
   onClose: () => void;
   onContact: () => void;
 }) {
+  const { stop, start } = useSmoothScroll();
+
   useEffect(() => {
+    stop();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      start();
+    };
+  }, [onClose, stop, start]);
 
   return (
     <div
@@ -30,7 +37,8 @@ export function DetailModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl rounded-xl border border-[#f4f4ed]/20 bg-[#1d2119] p-6 text-[#f4f4ed] shadow-2xl sm:p-8"
+        data-lenis-prevent
+        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-[#f4f4ed]/20 bg-[#1d2119] p-6 text-[#f4f4ed] shadow-2xl sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
@@ -93,6 +101,7 @@ export function DetailModal({
 }
 
 export function ContactModal({ onClose }: { onClose: () => void }) {
+  const { stop, start } = useSmoothScroll();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -100,12 +109,16 @@ export function ContactModal({ onClose }: { onClose: () => void }) {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
+    stop();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      start();
+    };
+  }, [onClose, stop, start]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +139,8 @@ export function ContactModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-xl border border-[#1d2119]/20 bg-[#f4f4ed] p-6 text-[#1d2119] shadow-2xl sm:p-8"
+        data-lenis-prevent
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-[#1d2119]/20 bg-[#f4f4ed] p-6 text-[#1d2119] shadow-2xl sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">

@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { RollingText } from "@/components/wiranala/RollingText";
+import { useSmoothScroll } from "@/components/wiranala/SmoothScrollProvider";
 import { navItems, teamIdentity } from "@/lib/team-data";
 
 interface HeaderProps {
@@ -11,6 +13,7 @@ interface HeaderProps {
 
 export function Header({ onOpenContact, darkSurface = false }: HeaderProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { scrollTo, stop, start } = useSmoothScroll();
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -19,6 +22,27 @@ export function Header({ onOpenContact, darkSurface = false }: HeaderProps) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (drawerOpen) {
+      stop();
+      return () => start();
+    }
+    return undefined;
+  }, [drawerOpen, stop, start]);
+
+  const handleAnchor = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+    closeDrawer = false
+  ) => {
+    e.preventDefault();
+    if (closeDrawer) {
+      setDrawerOpen(false);
+      start();
+    }
+    scrollTo(href, { offset: -16 });
+  };
 
   const inkClass = darkSurface ? "text-[#f4f4ed]" : "text-[#1d2119]";
   const borderBtnClass = darkSurface
@@ -32,6 +56,7 @@ export function Header({ onOpenContact, darkSurface = false }: HeaderProps) {
           {/* Stacked WIRA / NALA Brand Lockup */}
           <a
             href="#scroll-story"
+            onClick={(e) => handleAnchor(e, "#scroll-story")}
             aria-label={teamIdentity.name}
             className={`pointer-events-auto inline-flex flex-col rounded-md px-2 py-1 leading-none transition-colors duration-150 ${
               darkSurface
@@ -50,6 +75,7 @@ export function Header({ onOpenContact, darkSurface = false }: HeaderProps) {
           {/* Center Geometric Emblem */}
           <a
             href="#scroll-story"
+            onClick={(e) => handleAnchor(e, "#scroll-story")}
             aria-label="Back to top"
             className={`pointer-events-auto hidden rounded-md px-2.5 py-1.5 transition-colors duration-150 md:inline-flex ${
               darkSurface
@@ -78,9 +104,9 @@ export function Header({ onOpenContact, darkSurface = false }: HeaderProps) {
             <button
               type="button"
               onClick={onOpenContact}
-              className="min-h-[44px] rounded-md bg-[#d2ff00] px-4 py-2 font-display text-sm font-bold uppercase tracking-[0.08em] text-[#11140d] shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-[#dcff33] sm:px-5"
+              className="group min-h-[44px] rounded-md bg-[#d2ff00] px-4 py-2 font-display text-sm font-bold uppercase tracking-[0.08em] text-[#11140d] shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-[#dcff33] sm:px-5"
             >
-              Contact
+              <RollingText text="Contact" />
             </button>
 
             <button
@@ -88,12 +114,13 @@ export function Header({ onOpenContact, darkSurface = false }: HeaderProps) {
               onClick={() => setDrawerOpen(true)}
               aria-label="Open navigation menu"
               aria-expanded={drawerOpen}
-              className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-md border px-3 transition-colors duration-150 ${borderBtnClass}`}
+              className={`group inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-md border px-3 transition-colors duration-150 ${borderBtnClass}`}
             >
               <Menu aria-hidden="true" className="h-4 w-4" />
-              <span className="hidden font-display text-xs font-bold uppercase tracking-[0.14em] sm:inline">
-                Menu
-              </span>
+              <RollingText
+                text="Menu"
+                className="hidden font-display text-xs font-bold uppercase tracking-[0.14em] sm:inline-flex"
+              />
             </button>
           </div>
         </div>
@@ -111,7 +138,10 @@ export function Header({ onOpenContact, darkSurface = false }: HeaderProps) {
             onClick={() => setDrawerOpen(false)}
             className="fixed inset-0 bg-black/70"
           />
-          <aside className="relative z-10 flex h-full w-full max-w-sm flex-col justify-between overflow-y-auto bg-[#1d2119] p-7 text-[#f4f4ed] shadow-2xl">
+          <aside
+            data-lenis-prevent
+            className="relative z-10 flex h-full w-full max-w-sm flex-col justify-between overflow-y-auto bg-[#1d2119] p-7 text-[#f4f4ed] shadow-2xl"
+          >
             <div>
               <div className="flex items-center justify-between border-b border-[#f4f4ed]/15 pb-5">
                 <div>
@@ -137,12 +167,13 @@ export function Header({ onOpenContact, darkSurface = false }: HeaderProps) {
                   <a
                     key={item.label}
                     href={item.href}
-                    onClick={() => setDrawerOpen(false)}
+                    onClick={(e) => handleAnchor(e, item.href, true)}
                     className="group flex items-baseline justify-between border-b border-[#f4f4ed]/10 py-3.5 transition-colors hover:border-[#d2ff00]"
                   >
-                    <span className="font-display text-3xl font-extrabold uppercase tracking-tight text-[#f4f4ed] transition-colors group-hover:text-[#d2ff00]">
-                      {item.label}
-                    </span>
+                    <RollingText
+                      text={item.label}
+                      className="font-display text-3xl font-extrabold uppercase tracking-tight text-[#f4f4ed] transition-colors group-hover:text-[#d2ff00]"
+                    />
                     <span className="text-xs font-bold tracking-widest text-[#f4f4ed]/50 group-hover:text-[#d2ff00]">
                       0{idx + 1}
                     </span>
@@ -161,11 +192,12 @@ export function Header({ onOpenContact, darkSurface = false }: HeaderProps) {
                 type="button"
                 onClick={() => {
                   setDrawerOpen(false);
+                  start();
                   onOpenContact();
                 }}
-                className="min-h-[44px] w-full rounded-md bg-[#d2ff00] px-5 py-3 font-display text-sm font-bold uppercase tracking-[0.1em] text-[#11140d] hover:bg-[#dcff33]"
+                className="group min-h-[44px] w-full rounded-md bg-[#d2ff00] px-5 py-3 font-display text-sm font-bold uppercase tracking-[0.1em] text-[#11140d] hover:bg-[#dcff33]"
               >
-                Contact Team
+                <RollingText text="Contact Team" />
               </button>
             </div>
           </aside>
